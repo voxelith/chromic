@@ -1,5 +1,11 @@
+import ColorPicker from "@/components/ColorPicker";
+
 function App() {
-  return null;
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center">
+      <ColorPicker />
+    </div>
+  );
 }
 
-export default App
+export default App;
