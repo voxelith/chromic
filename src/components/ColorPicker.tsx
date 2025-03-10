@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, ReactNode } from "react";
 import { useBBox } from "@/utils/useBBox";
+import { Range } from "react-range";
 
 const degToRad = Math.PI / 180;
 
@@ -26,6 +27,7 @@ export default function ColorPicker() {
   const { ref: radarRef, bBox, handleResize } = useBBox<HTMLDivElement>();
   const [hue, setHue] = useState(0.0);
   const [sat, setSat] = useState(0.0);
+  const [lit, setLit] = useState(0.0);
   const [x, y] = hsToPositionPolar(hue, sat);
   const left = x * bBox.width;
   const top = y * bBox.height;
@@ -53,17 +55,38 @@ export default function ColorPicker() {
     handleResize();
   }, [handleMouseMove, handleMouseUp, handleResize]);
 
+  // TODO: memoize some colors/gradient calculations
+  const backgroundColor = `hsl(${hue}deg ${sat * 100}% ${lit * 100}%)`;
+
   return (
-    <div className="p-4 pt-2 bg-neutral-200 rounded-md shadow-lg flex flex-col items-center space-y-2 w-48">
+    <div className="p-4 pt-2 bg-neutral-200 rounded-md shadow-lg flex flex-col items-center space-y-3 w-48">
       <div className="text-neutral-500">
         Color Picker
       </div>
       <div className="rounded-full w-full aspect-square inset-shadow-sm inset-shadow-black/15 hue-radar cursor-pointer" onMouseDown={handleMouseDown} ref={radarRef}>
         <div className="relative w-0 h-0" style={{ left, top }}>
-          <div style={{ backgroundColor: `hsl(${hue}deg ${sat * 100}% 50%)` }} className="relative -top-2.5 -left-2.5 size-5 aspect-square rounded-full border-neutral-100 border-4 outline-neutral-400 outline-1 hover:outline-4 hover:outline-neutral-400/50">
-          </div>
+          <div style={{ backgroundColor }} className="relative -top-2.5 -left-2.5 size-5 aspect-square rounded-full border-neutral-100 border-4 outline-neutral-400 outline-1 hover:outline-4 hover:outline-neutral-400/50" />
         </div>
       </div>
+      <Range
+        step={0.01}
+        min={0}
+        max={1}
+        values={[lit]}
+        onChange={(values) => setLit(values[0])}
+        renderTrack={({ props, children }) => (
+          <div
+            {...props}
+            className="mt-2 h-2 w-full rounded-full"
+            style={{ background: `linear-gradient(to right, hsl(${hue}deg ${sat * 100}% 0%), hsl(${hue}deg ${sat * 100}% 50%), hsl(${hue}deg ${sat * 100}% 100%)`, ...props.style }}
+          >
+            {children}
+          </div>
+        )}
+        renderThumb={({ props }) => (
+          <div {...props} style={{ backgroundColor, ...props.style }} className="relative size-5 aspect-square rounded-full border-neutral-100 border-4 outline-neutral-400 outline-1 hover:outline-4 hover:outline-neutral-400/50" />
+        )}
+      />
     </div>
   )
 }
